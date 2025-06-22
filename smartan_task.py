@@ -152,22 +152,9 @@ class PoseAnalysisGUI:
         results_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
         results_frame.pack_propagate(False)
         
-        # Rep Counter
-        rep_frame = tk.LabelFrame(results_frame, text="🔢 Rep Counter", 
-                                 font=('Arial', 11, 'bold'),
-                                 bg='#f0f0f0', fg='#9b59b6')
-        rep_frame.pack(fill=tk.X, padx=10, pady=5)
         
-        self.rep_count_var = tk.StringVar(value="Reps: 0")
         self.exercise_state_var = tk.StringVar(value="State: Ready")
         
-        rep_label = tk.Label(rep_frame, textvariable=self.rep_count_var, 
-                           font=('Arial', 16, 'bold'), bg='#f0f0f0', fg='#e74c3c')
-        rep_label.pack(pady=2)
-        
-        state_label = tk.Label(rep_frame, textvariable=self.exercise_state_var, 
-                              font=('Arial', 10), bg='#f0f0f0')
-        state_label.pack(pady=2)
         
         # Exercise-specific Analysis
         self.exercise_frame = tk.LabelFrame(results_frame, text="💪 Exercise Analysis", 
@@ -224,24 +211,17 @@ class PoseAnalysisGUI:
         self.reset_count()
         mode = self.exercise_mode.get()
         if mode == "bicep_curl":
-            self.exercise_frame.config(text="💪 Bicep Curl Analysis")
+            self.exercise_frame.config(text="Bicep Curl Analysis")
         elif mode == "pushup":
-            self.exercise_frame.config(text="🤸 Push-up Analysis")
+            self.exercise_frame.config(text="Push-up Analysis")
         else:
-            self.exercise_frame.config(text="🏃 General Pose Analysis")
+            self.exercise_frame.config(text="General Pose Analysis")
         
         self.status_var.set(f"Exercise mode changed to: {mode.replace('_', ' ').title()}")
     
     def reset_count(self):
-        self.rep_count = 0
-        self.exercise_state = "down"
-        self.pushup_state = "up"
         self.bicep_angles = []
         self.pushup_angles = []
-        self.rep_count_var.set("Reps: 0")
-        self.exercise_state_var.set("State: Ready")
-        self.feedback_text.delete(1.0, tk.END)
-        self.feedback_text.insert(tk.END, f"Rep count reset for {self.exercise_mode.get().replace('_', ' ').title()}\n")
     
     def start_video(self):
         if not self.is_recording:
@@ -377,23 +357,19 @@ class PoseAnalysisGUI:
             self.exercise_state = "down"
         elif elbow_angle < 50 and self.exercise_state == "down":
             self.exercise_state = "up"
-            self.rep_count += 1
-            self.rep_count_var.set(f"Reps: {self.rep_count}")
+            
         
         # Form analysis
         form_status = "Good Form" if 30 <= elbow_angle <= 170 else "Check Form"
         
         # Update UI
-        self.primary_angle_var.set(f"Elbow Angle: {int(elbow_angle)}°")
-        self.secondary_angle_var.set(f"Range: 30°-170°")
+        self.primary_angle_var.set(f"Elbow Angle: {int(elbow_angle)}")
+        self.secondary_angle_var.set(f"Range: 30-170")
         self.form_status_var.set(f"Form: {form_status}")
         self.form_status_label.config(fg='green' if form_status == "Good Form" else 'red')
         self.exercise_state_var.set(f"State: {self.exercise_state.title()}")
-        
-        # Draw annotations
-        cv2.putText(frame, f"Bicep Curl - Reps: {self.rep_count}", (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(frame, f"Elbow: {int(elbow_angle)}° - {form_status}", (10, 60),
+
+        cv2.putText(frame, f"Elbow: {int(elbow_angle)} - {form_status}", (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
         
         return elbow_angle, form_status
@@ -413,14 +389,7 @@ class PoseAnalysisGUI:
         
         self.pushup_angles.append(elbow_angle)
         
-        # Rep counting logic for pushups
-        if elbow_angle > 160 and self.pushup_state == "down":
-            self.pushup_state = "up"
-            self.rep_count += 1
-            self.rep_count_var.set(f"Reps: {self.rep_count}")
-        elif elbow_angle < 90 and self.pushup_state == "up":
-            self.pushup_state = "down"
-        
+    
         # Form analysis
         elbow_form = "Good" if 70 <= elbow_angle <= 180 else "Check Elbow"
         body_form = "Good" if 160 <= body_angle <= 180 else "Straighten Body"
@@ -432,11 +401,8 @@ class PoseAnalysisGUI:
         self.form_status_var.set(f"Form: {overall_form}")
         self.form_status_label.config(fg='green' if overall_form == "Good Form" else 'red')
         self.exercise_state_var.set(f"State: {self.pushup_state.title()}")
-        
-        # Draw annotations
-        cv2.putText(frame, f"Push-up - Reps: {self.rep_count}", (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(frame, f"Elbow: {int(elbow_angle)}° Body: {int(body_angle)}°", (10, 60),
+
+        cv2.putText(frame, f"Elbow: {int(elbow_angle)} Body: {int(body_angle)}", (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
         
         return elbow_angle, body_angle, overall_form
@@ -485,7 +451,7 @@ class PoseAnalysisGUI:
         
         elbow_angle = self.calculate_angle(l_shoulder, l_elbow, l_wrist)
         
-        self.primary_angle_var.set(f"Elbow Angle: {int(elbow_angle)}°")
+        self.primary_angle_var.set(f"Elbow Angle: {int(elbow_angle)}")
         self.secondary_angle_var.set(f"General Analysis")
         self.form_status_var.set("Pose Detected")
         self.form_status_label.config(fg='blue')
@@ -507,17 +473,17 @@ class PoseAnalysisGUI:
     
     def update_realtime_feedback_bicep(self, elbow_angle, form_status):
         feedback = f"[{time.strftime('%H:%M:%S')}] Bicep Curl\n"
-        feedback += f"• Elbow angle: {int(elbow_angle)}°\n"
+        feedback += f"• Elbow angle: {int(elbow_angle)}\n"
         feedback += f"• Form: {form_status}\n"
         feedback += f"• Reps completed: {self.rep_count}\n"
         
         if form_status == "Good Form":
-            feedback += "• Keep it up! Maintain controlled movement\n"
+            feedback += "• Keep it up! \n"
         else:
             if elbow_angle < 30:
-                feedback += "• Don't curl too far - ease up slightly\n"
+                feedback += "It is very small angle, extend more\n"
             elif elbow_angle > 170:
-                feedback += "• Lower the weight more for full extension\n"
+                feedback += "• Lower the weight,and bring the curl closer to the body\n"
         
         feedback += "\n"
         
@@ -530,18 +496,17 @@ class PoseAnalysisGUI:
     
     def update_realtime_feedback_pushup(self, elbow_angle, body_angle, form_status):
         feedback = f"[{time.strftime('%H:%M:%S')}] Push-up\n"
-        feedback += f"• Elbow angle: {int(elbow_angle)}°\n"
-        feedback += f"• Body alignment: {int(body_angle)}°\n"
+        feedback += f"• Elbow angle: {int(elbow_angle)}\n"
+        feedback += f"• Body alignment: {int(body_angle)}\n"
         feedback += f"• Form: {form_status}\n"
-        feedback += f"• Reps completed: {self.rep_count}\n"
         
         if form_status == "Good Form":
-            feedback += "• Excellent form! Keep the rhythm steady\n"
+            feedback += "• Excellent form!\n"
         else:
             if elbow_angle < 70:
                 feedback += "• Go deeper for a full push-up\n"
             if body_angle < 160:
-                feedback += "• Keep your body straight - engage core\n"
+                feedback += "• Keep your body straight \n"
         
         feedback += "\n"
         
